@@ -3,12 +3,11 @@ package com.bootcamp.desafioSpring.services;
 import com.bootcamp.desafioSpring.exceptions.NoStockException;
 import com.bootcamp.desafioSpring.exceptions.OrderException;
 import com.bootcamp.desafioSpring.exceptions.ProductNotFoundException;
-import com.bootcamp.desafioSpring.model.ArticleDTO;
-import com.bootcamp.desafioSpring.model.ProductDTO;
-import com.bootcamp.desafioSpring.model.PurchaseRequestDTO;
-import com.bootcamp.desafioSpring.model.PurchaseRequestResponseDTO;
+import com.bootcamp.desafioSpring.model.*;
 import com.bootcamp.desafioSpring.repository.IMarketPlaceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,6 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @Service
+@Qualifier("marketPlaceService")
 public class MarketPlaceServiceImpl implements IMarketPlaceService {
 
     @Autowired
@@ -82,14 +82,15 @@ public class MarketPlaceServiceImpl implements IMarketPlaceService {
     }
 
     @Override
-    public PurchaseRequestResponseDTO processSolicitud(PurchaseRequestDTO solicitud) throws ProductNotFoundException, NoStockException {
-        List<ProductDTO> productDTOS = null;
-        PurchaseRequestResponseDTO response = new PurchaseRequestResponseDTO();
+    public PurchaseRequestResponseDTO processPurchaseRequest(PurchaseRequestDTO request) throws ProductNotFoundException, NoStockException {
+        List<ProductDTO> productDTOS;
+        List<ArticleDTO> articles = processShoppingCart(request.getArticles());
+        TicketDTO ticket = new TicketDTO();
         double aux = 0.0;
         boolean productExist = false;
         try {
             productDTOS = getProducts(null, null, null, null, null, null, null);
-            for (ArticleDTO a : solicitud.getArticles()) {
+            for (ArticleDTO a : articles) {
                 for (ProductDTO p : productDTOS) {
                     if (a.getProductId().equals(p.getProductId())) {
                         if (a.getQuantity() <= p.getQuantity()) { //Control de stock. Que la cantidad solicitada sea menor que la que existe.
@@ -109,11 +110,54 @@ public class MarketPlaceServiceImpl implements IMarketPlaceService {
         } catch (OrderException e) {
             e.printStackTrace();
         }
-        repository.savePurchaseRequest(solicitud);
-        response.setSolicitudId(repository.getPurchaseRequest().size());
-        response.setArticles(solicitud.getArticles());
-        response.setCost(aux);
 
-        return response;
+        repository.savePurchaseRequest(request);
+        ticket.setSolicitudId(repository.getPurchaseRequest().size());
+        ticket.setArticles(articles);
+        ticket.setCost(aux);
+        PurchaseRequestResponseDTO purchaseRequestResponse = new PurchaseRequestResponseDTO();
+        purchaseRequestResponse.setTicket(ticket);
+        purchaseRequestResponse.setStatus(HttpStatus.OK);
+        return purchaseRequestResponse;
+    }
+
+    private List<ArticleDTO> processShoppingCart(List<ArticleDTO> request) {
+        List<ArticleDTO> articles = new ArrayList<>();
+
+        for (ArticleDTO ar : request) {
+            ArticleDTO article = new ArticleDTO();
+            article.setName(ar.getName());
+            article.setBrand(ar.getBrand());
+            article.setQuantity(ar.getQuantity());
+            article.setProductId(ar.getProductId());
+            articles.add(article);
+        }
+        boolean containsArticle = false;
+        for (PurchaseRequestDTO pr : repository.getPurchaseRequest()) {
+            for (ArticleDTO prArticle : pr.getArticles()) {
+                for (ArticleDTO newRequestArticle : articles) {
+                    if (newRequestArticle.getProductId().equals(prArticle.getProductId())) {
+                        int cant = newRequestArticle.getQuantity() + prArticle.getQuantity();
+                        newRequestArticle.setQuantity(cant);
+                        containsArticle = true;
+                    }
+                }
+                if (!containsArticle) {
+                    articles.add(prArticle);
+                }
+                containsArticle = false;
+            }
+        }
+        return articles;
+    }
+
+    @Override
+    public void deletePurchaseRequest(Integer id) {
+        repository.deletePurchaseRequest(id);
+    }
+
+    @Override
+    public List<PurchaseRequestDTO> getPurchaseRequests() {
+        return repository.getPurchaseRequest();
     }
 }

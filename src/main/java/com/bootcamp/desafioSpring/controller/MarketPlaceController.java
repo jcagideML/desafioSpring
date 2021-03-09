@@ -1,23 +1,30 @@
 package com.bootcamp.desafioSpring.controller;
 
 import com.bootcamp.desafioSpring.exceptions.*;
+import com.bootcamp.desafioSpring.model.ClientDTO;
 import com.bootcamp.desafioSpring.model.ProductDTO;
 import com.bootcamp.desafioSpring.model.PurchaseRequestDTO;
 import com.bootcamp.desafioSpring.model.PurchaseRequestResponseDTO;
+import com.bootcamp.desafioSpring.services.IClientService;
 import com.bootcamp.desafioSpring.services.IMarketPlaceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 public class MarketPlaceController {
 
     @Autowired
-    IMarketPlaceService marketPlaceService;
+    @Qualifier("clientService")
+    IClientService clientService;
 
+    @Autowired
+    @Qualifier("marketPlaceService")
+    IMarketPlaceService marketPlaceService;
 
     /*
     Genero un único EndPoint para recibir las request de productos.
@@ -35,20 +42,62 @@ public class MarketPlaceController {
         return marketPlaceService.getProducts(name, category, brand, price, freeShiping, prestige, order);
     }
 
-
     /*
     EndPoint para la recepcion de purchaseRequest.
      */
     @PostMapping(value = "/api/v1/purchase-request")
-    public PurchaseRequestResponseDTO solicitud(@RequestBody PurchaseRequestDTO solicitud) throws ProductNotFoundException, NoStockException {
-        return marketPlaceService.processSolicitud(solicitud);
+    public PurchaseRequestResponseDTO purchaseRequest(@RequestBody PurchaseRequestDTO solicitud) throws ProductNotFoundException, NoStockException {
+        return marketPlaceService.processPurchaseRequest(solicitud);
     }
 
-    /*
-    Manejador único y general de excepciones.
-     */
+    @GetMapping(value = "/api/v1/purchase-request/getAll")
+    public List<PurchaseRequestDTO> getAllPurchaseRequest() {
+        return this.marketPlaceService.getPurchaseRequests();
+    }
+
+    @GetMapping(value = "/api/v1/purchase-request/delete/{requestId}")
+    public List<PurchaseRequestDTO> deletePurchaseRequest(@PathVariable(value = "requestId") Integer id) {
+        this.marketPlaceService.deletePurchaseRequest(id);
+        return this.marketPlaceService.getPurchaseRequests();
+    }
+
+    @PostMapping(value = "/api/v1/clients/newClient")
+    public void newClient(@RequestBody ClientDTO client) throws MissingDataException, ClientAlreadyExistException {
+        this.clientService.newClient(client);
+    }
+
+    @GetMapping(value = "/api/v1/clients/getAll")
+    public List<ClientDTO> getAllClients() {
+        return this.clientService.getClients();
+    }
+
+    @GetMapping(value = "/api/v1/clients/getByProvincia/{provincia}")
+    public List<ClientDTO> getClientByProvincia(@PathVariable(value = "provincia") String provincia) {
+        return this.clientService.getClientByProvincia(provincia);
+    }
+
+    @GetMapping(value = "/api/v1/clients/delete/{clientId}")
+    public List<ClientDTO> deleteClient(@PathVariable(value = "clientId") Integer id) {
+        this.clientService.deleteClient(id);
+        return this.clientService.getClients();
+    }
+
     @ExceptionHandler(MarketPlaceException.class)
     public ResponseEntity<ErrorDTO> handleException(MarketPlaceException exception) {
         return new ResponseEntity<>(exception.getError(), exception.getStatus());
+    }
+
+    @ExceptionHandler(ClientException.class)
+    public ResponseEntity<ErrorDTO> handleException(ClientException exception) {
+        return new ResponseEntity<>(exception.getError(), exception.getStatus());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorDTO> handleRunTimeException(RuntimeException exception) {
+        ErrorDTO error = new ErrorDTO();
+        error.setName("Internal server error.");
+        error.setDescription("Un error en el servidor provocó que se detuviera la ejecución. Contactese con soporte.");
+        exception.printStackTrace();
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -11,7 +11,7 @@ public interface IMarketPlaceRepository {
 
     void savePurchaseRequest(PurchaseRequestDTO purchaseRequest);
 
-    void deletePurchaseRequest(PurchaseRequestDTO purchaseRequest);
+    void deletePurchaseRequest(Integer id);
 
     List<PurchaseRequestDTO> getPurchaseRequest();
 }

@@ -19,12 +19,14 @@ public class MarketPlaceRepositoryImpl implements IMarketPlaceRepository {
 
     List<ProductDTO> products;
     List<PurchaseRequestDTO> purchaseRequests;
+    private int cont;
 
     public MarketPlaceRepositoryImpl() {
         //Hago uso de la clase utilitaria que lee el archivo excel y lo transforma en JSON.
         XLSXToJSONConverter.toJSON(XLSXToJSONConverter.getRowsFromXLSX("Lista de Productos.xlsx"));
         products = getFromJSON(); //Guardo lo que levanto del archivo en memoria, para no llamarlo reiteradas veces.
         purchaseRequests = new ArrayList<>();
+        cont = 0;
     }
 
     @Override
@@ -34,12 +36,14 @@ public class MarketPlaceRepositoryImpl implements IMarketPlaceRepository {
 
     @Override
     public void savePurchaseRequest(PurchaseRequestDTO purchaseRequest) {
+        purchaseRequest.setRequestId(cont);
         this.purchaseRequests.add(purchaseRequest);
+        cont++;
     }
 
     @Override
-    public void deletePurchaseRequest(PurchaseRequestDTO purchaseRequest) {
-        this.purchaseRequests.remove(purchaseRequest);
+    public void deletePurchaseRequest(Integer id) {
+        this.purchaseRequests.removeIf(p -> p.getRequestId().equals(id));
     }
 
     @Override

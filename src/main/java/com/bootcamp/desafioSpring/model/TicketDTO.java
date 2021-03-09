@@ -7,7 +7,9 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PurchaseRequestDTO {
-    Integer requestId;
+public class TicketDTO {
+
+    Integer solicitudId;
     List<ArticleDTO> articles;
+    Double cost;
 }

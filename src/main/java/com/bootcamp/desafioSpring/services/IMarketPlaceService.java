@@ -15,5 +15,9 @@ public interface IMarketPlaceService {
 
     List<ProductDTO> orderProducts(List<ProductDTO> products, Integer order) throws OrderException;
 
-    PurchaseRequestResponseDTO processSolicitud(PurchaseRequestDTO solicitud) throws ProductNotFoundException, NoStockException;
+    PurchaseRequestResponseDTO processPurchaseRequest(PurchaseRequestDTO request) throws ProductNotFoundException, NoStockException;
+
+    void deletePurchaseRequest(Integer id);
+
+    List<PurchaseRequestDTO> getPurchaseRequests();
 }

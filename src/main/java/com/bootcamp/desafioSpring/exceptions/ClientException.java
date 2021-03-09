@@ -6,10 +6,8 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @Setter
-/*
-Clase padre de la cual heradan las excepciones del marketPlace.
- */
-public abstract class MarketPlaceException extends Exception {
+public abstract class ClientException extends Exception {
     private ErrorDTO error;
     private HttpStatus status;
 }
+
