@@ -9,5 +9,4 @@ public class ErrorDTO {
 
     private String name;
     private String description;
-
 }
