@@ -9,7 +9,7 @@ import java.util.List;
 @Setter
 public class TicketDTO {
 
-    Integer solicitudId;
+    Integer ticketId;
     List<ArticleDTO> articles;
     Double cost;
 }

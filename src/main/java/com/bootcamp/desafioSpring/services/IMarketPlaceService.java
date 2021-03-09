@@ -20,4 +20,8 @@ public interface IMarketPlaceService {
     void deletePurchaseRequest(Integer id);
 
     List<PurchaseRequestDTO> getPurchaseRequests();
+
+    PurchaseRequestResponseDTO finishBuy() throws ProductNotFoundException, NoStockException;
+
+    List<PurchaseRequestResponseDTO> getSells();
 }

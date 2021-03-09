@@ -44,6 +44,8 @@ public class MarketPlaceController {
 
     /*
     EndPoint para la recepcion de purchaseRequest.
+    Las request son acumulativas y tambien se pueden borrar.
+    Si se borra una purchaseRequest, se actualiza el valor del carrito tambien.
      */
     @PostMapping(value = "/api/v1/purchase-request")
     public PurchaseRequestResponseDTO purchaseRequest(@RequestBody PurchaseRequestDTO solicitud) throws ProductNotFoundException, NoStockException {
@@ -61,6 +63,21 @@ public class MarketPlaceController {
         return this.marketPlaceService.getPurchaseRequests();
     }
 
+    @GetMapping(value = "/api/v1/purchase-request/finish")
+    public PurchaseRequestResponseDTO finishBuy() throws ProductNotFoundException, NoStockException {
+        return this.marketPlaceService.finishBuy();
+    }
+
+    @GetMapping(value = "/api/v1/purchase-request/getAllSells")
+    public List<PurchaseRequestResponseDTO> getAllSells() {
+        return this.marketPlaceService.getSells();
+    }
+
+    /*
+   EndPoints para controlar request de clientes.
+   Se puede dar de alta y eliminar un cliente.
+   También se puede obtener todos los clientes o filtrarlos por provincia.
+    */
     @PostMapping(value = "/api/v1/clients/newClient")
     public void newClient(@RequestBody ClientDTO client) throws MissingDataException, ClientAlreadyExistException {
         this.clientService.newClient(client);
@@ -82,6 +99,11 @@ public class MarketPlaceController {
         return this.clientService.getClients();
     }
 
+
+    /*
+    Se crean tres handler de excepciones. Se diferencia entre MarketPlace y Client.
+    Por último, se atajan las runtime exception y se le avisa al usuario que ocurrió un error interno.
+     */
     @ExceptionHandler(MarketPlaceException.class)
     public ResponseEntity<ErrorDTO> handleException(MarketPlaceException exception) {
         return new ResponseEntity<>(exception.getError(), exception.getStatus());

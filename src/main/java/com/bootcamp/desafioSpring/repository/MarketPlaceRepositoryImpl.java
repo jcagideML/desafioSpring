@@ -2,6 +2,7 @@ package com.bootcamp.desafioSpring.repository;
 
 import com.bootcamp.desafioSpring.model.ProductDTO;
 import com.bootcamp.desafioSpring.model.PurchaseRequestDTO;
+import com.bootcamp.desafioSpring.model.PurchaseRequestResponseDTO;
 import com.bootcamp.desafioSpring.utils.XLSXToJSONConverter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,14 +20,18 @@ public class MarketPlaceRepositoryImpl implements IMarketPlaceRepository {
 
     List<ProductDTO> products;
     List<PurchaseRequestDTO> purchaseRequests;
-    private int cont;
+    List<PurchaseRequestResponseDTO> sells;
+    private int prCont;
+    private int sCont;
 
     public MarketPlaceRepositoryImpl() {
         //Hago uso de la clase utilitaria que lee el archivo excel y lo transforma en JSON.
         XLSXToJSONConverter.toJSON(XLSXToJSONConverter.getRowsFromXLSX("Lista de Productos.xlsx"));
         products = getFromJSON(); //Guardo lo que levanto del archivo en memoria, para no llamarlo reiteradas veces.
         purchaseRequests = new ArrayList<>();
-        cont = 0;
+        sells = new ArrayList<>();
+        prCont = 0;
+        sCont = 0;
     }
 
     @Override
@@ -36,9 +41,9 @@ public class MarketPlaceRepositoryImpl implements IMarketPlaceRepository {
 
     @Override
     public void savePurchaseRequest(PurchaseRequestDTO purchaseRequest) {
-        purchaseRequest.setRequestId(cont);
+        purchaseRequest.setRequestId(prCont);
         this.purchaseRequests.add(purchaseRequest);
-        cont++;
+        prCont++;
     }
 
     @Override
@@ -49,6 +54,18 @@ public class MarketPlaceRepositoryImpl implements IMarketPlaceRepository {
     @Override
     public List<PurchaseRequestDTO> getPurchaseRequest() {
         return this.purchaseRequests;
+    }
+
+    @Override
+    public void saveSell(PurchaseRequestResponseDTO purchaseRequestResponse) {
+        purchaseRequestResponse.getTicket().setTicketId(sCont);
+        this.sells.add(purchaseRequestResponse);
+        sCont++;
+    }
+
+    @Override
+    public List<PurchaseRequestResponseDTO> getSells() {
+        return this.sells;
     }
 
     /*

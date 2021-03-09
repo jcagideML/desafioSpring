@@ -10,10 +10,10 @@ public class NoStockException extends MarketPlaceException {
     Tiene como paramentro el artículo que lanzó la excepción para que el usuario pueda saber cuál es el que
     debe disminuir.
      */
-    public NoStockException(ArticleDTO article) {
+    public NoStockException(String name, String brand) {
         ErrorDTO error = new ErrorDTO();
         error.setName("No hay esa cantidad del producto");
-        error.setDescription("La cantidad ingresada de " + article.getName() + " marca " + article.getBrand() + " excede el stock.");
+        error.setDescription("La cantidad ingresada de " + name + " marca " + brand + " excede el stock.");
         this.setError(error);
         this.setStatus(HttpStatus.BAD_REQUEST);
     }
