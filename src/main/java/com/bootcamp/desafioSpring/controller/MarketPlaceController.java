@@ -1,10 +1,7 @@
 package com.bootcamp.desafioSpring.controller;
 
 import com.bootcamp.desafioSpring.exceptions.*;
-import com.bootcamp.desafioSpring.model.ClientDTO;
-import com.bootcamp.desafioSpring.model.ProductDTO;
-import com.bootcamp.desafioSpring.model.PurchaseRequestDTO;
-import com.bootcamp.desafioSpring.model.PurchaseRequestResponseDTO;
+import com.bootcamp.desafioSpring.model.*;
 import com.bootcamp.desafioSpring.services.IClientService;
 import com.bootcamp.desafioSpring.services.IMarketPlaceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +36,15 @@ public class MarketPlaceController {
                                         @RequestParam(value = "freeShiping", required = false) Boolean freeShiping,
                                         @RequestParam(value = "prestige", required = false) Integer prestige,
                                         @RequestParam(value = "order", required = false) Integer order) throws OrderException {
-        return marketPlaceService.getProducts(name, category, brand, price, freeShiping, prestige, order);
+        ParamsDTO params = new ParamsDTO();
+        params.setName(name);
+        params.setCategory(category);
+        params.setBrand(brand);
+        params.setPrice(price);
+        params.setFreeShiping(freeShiping);
+        params.setPrestige(prestige);
+        params.setOrder(order);
+        return marketPlaceService.getProducts(params);
     }
 
     /*
@@ -48,7 +53,7 @@ public class MarketPlaceController {
     Si se borra una purchaseRequest, se actualiza el valor del carrito tambien.
      */
     @PostMapping(value = "/api/v1/purchase-request")
-    public PurchaseRequestResponseDTO purchaseRequest(@RequestBody PurchaseRequestDTO solicitud) throws ProductNotFoundException, NoStockException {
+    public PurchaseRequestResponseDTO purchaseRequest(@RequestBody PurchaseRequestDTO solicitud) throws ProductNotFoundException, NoStockException, BadRequestException {
         return marketPlaceService.processPurchaseRequest(solicitud);
     }
 
@@ -58,13 +63,13 @@ public class MarketPlaceController {
     }
 
     @GetMapping(value = "/api/v1/purchase-request/delete/{requestId}")
-    public List<PurchaseRequestDTO> deletePurchaseRequest(@PathVariable(value = "requestId") Integer id) {
+    public List<PurchaseRequestDTO> deletePurchaseRequest(@PathVariable(value = "requestId") Integer id) throws BadRequestException {
         this.marketPlaceService.deletePurchaseRequest(id);
         return this.marketPlaceService.getPurchaseRequests();
     }
 
     @GetMapping(value = "/api/v1/purchase-request/finish")
-    public PurchaseRequestResponseDTO finishBuy() throws ProductNotFoundException, NoStockException {
+    public PurchaseRequestResponseDTO finishBuy() throws ProductNotFoundException, NoStockException, BadRequestException {
         return this.marketPlaceService.finishBuy();
     }
 

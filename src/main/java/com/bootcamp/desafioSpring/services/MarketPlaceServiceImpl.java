@@ -1,5 +1,6 @@
 package com.bootcamp.desafioSpring.services;
 
+import com.bootcamp.desafioSpring.exceptions.BadRequestException;
 import com.bootcamp.desafioSpring.exceptions.NoStockException;
 import com.bootcamp.desafioSpring.exceptions.OrderException;
 import com.bootcamp.desafioSpring.exceptions.ProductNotFoundException;
@@ -26,63 +27,12 @@ public class MarketPlaceServiceImpl implements IMarketPlaceService {
     }
 
     @Override
-    public List<ProductDTO> getProducts(String name, String category, String brand, Double price, Boolean freeShiping, Integer prestige, Integer order) throws OrderException {
-        List<ProductDTO> products = new ArrayList<>(repository.getProducts());
-
-        if (name != null) {
-            products.removeIf(p -> !p.getName().equals(name));
-        }
-        if (category != null) {
-            products.removeIf(p -> !p.getCategory().equals(category));
-        }
-        if (brand != null) {
-            products.removeIf(p -> !p.getBrand().equals(brand));
-        }
-        if (price != null) {
-            products.removeIf(p -> !p.getPrice().equals(price));
-        }
-        if (freeShiping != null) {
-            products.removeIf(p -> !p.getFreeShiping().equals(freeShiping));
-        }
-        if (prestige != null) {
-            products.removeIf(p -> !p.getPrestige().equals(prestige));
-        }
-
-        if (order != null) {
-            products = this.orderProducts(products, order);
-        }
-        return products;
+    public List<ProductDTO> getProducts(ParamsDTO params) throws OrderException {
+        return repository.getProducts(params);
     }
 
     @Override
-    public List<ProductDTO> orderProducts(List<ProductDTO> products, Integer order) throws OrderException {
-
-        Comparator<ProductDTO> productComparator = null;
-
-        switch (order) {
-            case 0:
-                productComparator = Comparator.comparing(ProductDTO::getName, Comparator.naturalOrder());
-                break;
-            case 1:
-                productComparator = Comparator.comparing(ProductDTO::getName, Comparator.reverseOrder());
-                break;
-            case 2:
-                productComparator = Comparator.comparing(ProductDTO::getPrice, Comparator.reverseOrder());
-                break;
-            case 3:
-                productComparator = Comparator.comparing(ProductDTO::getPrice, Comparator.naturalOrder());
-                break;
-        }
-        if (productComparator != null) {
-            products.sort(productComparator);
-            return products;
-        } else {
-            throw new OrderException();
-        }
-    }
-
-    @Override
-    public PurchaseRequestResponseDTO processPurchaseRequest(PurchaseRequestDTO request) throws ProductNotFoundException, NoStockException {
+    public PurchaseRequestResponseDTO processPurchaseRequest(PurchaseRequestDTO request) throws ProductNotFoundException, NoStockException, BadRequestException {
         List<ProductDTO> productDTOS;
 
         acumulativeMap.clear();
@@ -94,7 +44,7 @@ public class MarketPlaceServiceImpl implements IMarketPlaceService {
         TicketDTO ticket = new TicketDTO();
         PurchaseRequestResponseDTO purchaseRequestResponse = null;
         try {
-            productDTOS = getProducts(null, null, null, null, null, null, null);
+            productDTOS = getProducts(new ParamsDTO());
             double aux = stockAndCostCalculator(productDTOS);
 
             repository.savePurchaseRequest(request);
@@ -166,7 +116,7 @@ public class MarketPlaceServiceImpl implements IMarketPlaceService {
     }
 
     @Override
-    public void deletePurchaseRequest(Integer id) {
+    public void deletePurchaseRequest(Integer id) throws BadRequestException {
         repository.deletePurchaseRequest(id);
     }
 
@@ -176,7 +126,7 @@ public class MarketPlaceServiceImpl implements IMarketPlaceService {
     }
 
     @Override
-    public PurchaseRequestResponseDTO finishBuy() throws ProductNotFoundException, NoStockException {
+    public PurchaseRequestResponseDTO finishBuy() throws ProductNotFoundException, NoStockException, BadRequestException {
         List<ProductDTO> productDTOS;
         acumulativeMap.clear();
         for (PurchaseRequestDTO pr : repository.getPurchaseRequest()) {
@@ -185,7 +135,7 @@ public class MarketPlaceServiceImpl implements IMarketPlaceService {
         TicketDTO ticket = new TicketDTO();
         PurchaseRequestResponseDTO purchaseRequestResponse = null;
         try {
-            productDTOS = getProducts(null, null, null, null, null, null, null);
+            productDTOS = getProducts(new ParamsDTO());
             double aux = stockAndCostCalculator(productDTOS);
 
             ticket.setArticles(getArticlesFromDataBase(acumulativeMap, productDTOS));
